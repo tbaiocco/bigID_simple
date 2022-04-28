@@ -1,54 +1,42 @@
 package com.bigid.challenge.service;
 
-import com.bigid.challenge.utils.InfoUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FileReader {
+
+    private static final Logger logger = LoggerFactory.getLogger(FileReader.class);
 
     private FileReader() {
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(FileReader.class);
+    public static Map<Integer, List<String>> readFilePart(String filepath, int chunkSize) throws IOException {
+        final URL url = new URL(filepath);
 
-    public static List<String> readFile(String filepath) throws IOException {
-        final URL path = new URL(filepath);
-
-        long linesCounter = 0;
-
-        File tempFile = new File(System.currentTimeMillis()+".txt");
-        FileUtils.copyURLToFile(path, tempFile);
+        File tempFile = new File(System.currentTimeMillis() + ".txt");
+        FileUtils.copyURLToFile(url, tempFile);
         logger.info("File size: {} bytes", tempFile.length());
-        List<String> lines = new ArrayList<>();
 
-        try (final LineIterator it = FileUtils.lineIterator(tempFile, StandardCharsets.US_ASCII.displayName())) {
+        Path path = Path.of(tempFile.getPath());
+        final AtomicInteger c = new AtomicInteger();
 
-            while (it.hasNext()) {
-                linesCounter++;
-                lines.add(it.nextLine());
-            }
-
-        } catch (IOException e) {
-            logger.info("Expecting file to be closed: {}", e.getMessage());
+        try (Stream<String> lineStream = Files.lines(path)) {
+            return lineStream.collect(Collectors.groupingBy(e -> c.getAndIncrement() / chunkSize));
         } finally {
             Files.delete(tempFile.toPath());
         }
-        logger.info("Lines read: {} | Lines mapped: {} | Temp file deleted.",
-                linesCounter,
-                lines.size());
 
-        InfoUtils.logFreeMemoryStatus();
-
-        return lines;
     }
 }

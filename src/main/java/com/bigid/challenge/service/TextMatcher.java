@@ -1,6 +1,7 @@
 package com.bigid.challenge.service;
 
 import com.bigid.challenge.ReadMatchAggregateApp;
+import com.bigid.challenge.repository.LineResource;
 import com.bigid.challenge.repository.ResultNameOccurrence;
 import com.bigid.challenge.repository.ResultResource;
 import org.slf4j.Logger;
@@ -20,29 +21,27 @@ public class TextMatcher {
     private TextMatcher() {
     }
 
-    public static void processLinesInParallel(List<String> linesRead) {
+    public static void processLinesInParallel(List<LineResource> linesRead) {
 
         Arrays.stream(COMMON_NAMES).parallel().forEach(name -> matchNames(name, linesRead));
-        logger.info("Threads used on matchers: {} ", threadsUsed.size());
+        logger.debug("Threads used on matchers: {} ", threadsUsed.size());
     }
 
-    private static void matchNames(String name, List<String> linesRead) {
+    private static void matchNames(String name, List<LineResource> linesRead) {
         ResultResource resultByName = TextMatcher.findNameInLines(linesRead, name);
         ReadMatchAggregateApp.repository.addResult(resultByName);
         threadsUsed.add(String.valueOf(Thread.currentThread().getId()));
         logger.debug("Running on thread {}: results for [{}] are <{}>", Thread.currentThread().getId(), name, resultByName);
     }
 
-    private static ResultResource findNameInLines(List<String> lines, String name) {
+    private static ResultResource findNameInLines(List<LineResource> lines, String name) {
 
         List<ResultNameOccurrence> occurrences = new ArrayList<>();
-        for (int i = 0; i < lines.size(); i++) {
-            int lineNumber = i + 1;
-            findWordInText(lines.get(i), name).forEach(idx ->
-                    occurrences.add(new ResultNameOccurrence.Builder(lineNumber, idx + 1L).build())
-            );
-
-        }
+        lines.forEach(lineResource ->
+            findWordInText(lineResource.getLineContent(), name).forEach(idx ->
+                    occurrences.add(new ResultNameOccurrence.Builder(lineResource.getLineOffset(), idx + 1L).build())
+            )
+        );
 
         return new ResultResource.Builder(name).occurrences(occurrences).build();
     }

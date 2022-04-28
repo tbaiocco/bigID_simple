@@ -1,5 +1,6 @@
 package com.bigid.challenge.repository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ResultResource {
@@ -20,6 +21,10 @@ public class ResultResource {
         return occurrences;
     }
 
+    public void appendOccurrences(List<ResultNameOccurrence> otherOccurrences) {
+        occurrences.addAll(otherOccurrences);
+    }
+
 
     @Override
     public String toString() {
@@ -29,7 +34,7 @@ public class ResultResource {
     public static class Builder {
 
         private final String name;
-        private List<ResultNameOccurrence> occurrences;
+        private List<ResultNameOccurrence> occurrences = new ArrayList<>();
 
         public Builder(String name) {
             this.name = name;
