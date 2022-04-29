@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id "application"
 }
 
 group 'com.bigid.challenge'
@@ -32,4 +33,12 @@ jar {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
+}
+
+ext {
+    javaMainClass = 'com.bigid.challenge.ReadMatchAggregateApp'
+}
+
+application {
+    mainClassName = javaMainClass
 }
