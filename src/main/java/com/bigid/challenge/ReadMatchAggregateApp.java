@@ -1,6 +1,5 @@
 package com.bigid.challenge;
 
-import com.bigid.challenge.repository.LineResource;
 import com.bigid.challenge.repository.ResultRepositoryInMemory;
 import com.bigid.challenge.service.FileReader;
 import com.bigid.challenge.service.ResultAggregator;
@@ -10,17 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class ReadMatchAggregateApp {
 
-    public static final String[] COMMON_NAMES = {"James", "John", "Robert", "Michael", "William", "David", "Richard",
-            "Charles", "Joseph", "Thomas", "Christopher", "Daniel", "Paul", "Mark", "Donald", "George", "Kenneth",
-            "Steven", "Edward", "Brian", "Ronald", "Anthony", "Kevin", "Jason", "Matthew", "Gary", "Timothy", "Jose",
-            "Larry", "Jeffrey", "Frank", "Scott", "Eric", "Stephen", "Andrew", "Raymond", "Gregory", "Joshua", "Jerry",
-            "Dennis", "Walter", "Patrick", "Peter", "Harold", "Douglas", "Henry", "Carl", "Arthur", "Ryan", "Roger"};
     public static final String FILEPATH = "http://norvig.com/big.txt";
     public static final ResultRepositoryInMemory repository = new ResultRepositoryInMemory();
     private static final int CHUNK_SIZE = 1000;
@@ -32,18 +25,11 @@ public class ReadMatchAggregateApp {
         InfoUtils.logMemoryOnInit();
         try {
 
-            Map<Integer, List<String>> mappedChunk = FileReader.readFilePart(FILEPATH, CHUNK_SIZE);
+            Map<Integer, List<String>> mappedChunk = FileReader.readFileInChunks(FILEPATH, CHUNK_SIZE);
 
-            mappedChunk.keySet().forEach(k -> {
-                List<LineResource> linesChunkToProcess = new ArrayList<>();
-                for (int i = 0; i < mappedChunk.get(k).size(); i++) {
-                    long lineNumber = i + 1L;
-                    linesChunkToProcess.add(new LineResource.Builder(lineNumber + (k * CHUNK_SIZE), mappedChunk.get(k).get(i)).build());
-                }
-                TextMatcher.processLinesInParallel(linesChunkToProcess);
-            });
+            mappedChunk.keySet().forEach(k -> TextMatcher.prepareAndProcessFileChunks(mappedChunk, k, CHUNK_SIZE));
 
-            ResultAggregator.processResults(repository.getAll());
+            ResultAggregator.aggregateResults(repository.getAll());
         } catch (IOException e) {
             logger.error("Error on URL or contents:", e);
         }

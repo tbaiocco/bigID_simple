@@ -17,9 +17,8 @@ public class ResultAggregator {
 
     private static final Logger logger = LoggerFactory.getLogger(ResultAggregator.class);
 
-    public static void processResults(List<ResultResource> myExecutionResults) {
+    public static void aggregateResults(List<ResultResource> myExecutionResults) {
 
-        logger.info("*** Alphabetical Ordered Results ***************************************************************");
         Map<String, List<ResultResource>> resultMap = myExecutionResults.stream()
                 .collect(Collectors.groupingBy(ResultResource::getName));
         List<ResultResource> flat = new ArrayList<>();
@@ -28,10 +27,15 @@ public class ResultAggregator {
             resultMap.get(k).forEach(resultResource -> flatObj.appendOccurrences(resultResource.getOccurrences()));
             flat.add(flatObj);
         });
+        printOrderedResults(flat);
+
+    }
+
+    private static void printOrderedResults(List<ResultResource> flat) {
+        logger.info("*** Alphabetical Ordered Results ***************************************************************");
         flat.stream()
                 .sorted(Comparator.comparing(ResultResource::getName))
                 .forEach(result -> logger.info(result.toString()));
         logger.info("*** End of Results *****************************************************************************");
-
     }
 }

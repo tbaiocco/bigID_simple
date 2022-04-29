@@ -22,7 +22,7 @@ public class FileReader {
     private FileReader() {
     }
 
-    public static Map<Integer, List<String>> readFilePart(String filepath, int chunkSize) throws IOException {
+    public static Map<Integer, List<String>> readFileInChunks(String filepath, int chunkSize) throws IOException {
         final URL url = new URL(filepath);
 
         File tempFile = new File(System.currentTimeMillis() + ".txt");
